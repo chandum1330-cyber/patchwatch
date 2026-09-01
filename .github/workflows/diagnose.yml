@@ -1,0 +1,74 @@
+name: diagnose
+
+# Run source probes from the Actions tab without needing a local Python install.
+# Read-only: touches no state, files no tickets, commits nothing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Which source to probe"
+        type: choice
+        options: [android, apple, msrc, kev, all]
+        default: android
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Probe source
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          SOFA_BASE: ${{ vars.SOFA_BASE || 'https://sofafeed.macadmins.io' }}
+        run: |
+          set +e
+          if [[ "${{ inputs.source }}" == "all" ]]; then
+            for s in android apple msrc kev; do
+              echo "==================== $s ===================="
+              python -m patchwatch dump-schema "$s"
+              echo
+            done
+          else
+            python -m patchwatch dump-schema "${{ inputs.source }}"
+          fi
+          exit 0
+
+      - name: Raw HTTP check
+        if: inputs.source == 'android' || inputs.source == 'all'
+        run: |
+          # Independent of the parser. Distinguishes "Google blocked us" from
+          # "our URL is wrong" from "the page loaded but the markup changed".
+          python - <<'PY'
+          import urllib.request, urllib.error
+
+          urls = [
+              "https://source.android.com/docs/security/bulletin",
+              "https://source.android.com/docs/security/bulletin/2026-08-01",
+              "https://source.android.com/docs/security/bulletin/2026-09-01",
+          ]
+          for url in urls:
+              req = urllib.request.Request(url, headers={
+                  "User-Agent": "patchwatch/1.0 (+internal security patch monitor)",
+                  "Accept": "text/html",
+              })
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      body = resp.read().decode("utf-8", errors="replace")
+                  print(f"{resp.status}  {url}")
+                  print(f"      final url : {resp.url}")
+                  print(f"      bytes     : {len(body)}")
+                  print(f"      has <table: {'<table' in body.lower()}")
+                  print(f"      has 'CVE-': {'CVE-' in body}")
+                  print(f"      cve count : {body.count('CVE-')}")
+              except urllib.error.HTTPError as exc:
+                  print(f"{exc.code}  {url}   <-- HTTP error")
+              except Exception as exc:
+                  print(f"ERR  {url}   {exc}")
+              print()
+          PY
