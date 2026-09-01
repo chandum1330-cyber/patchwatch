@@ -1,0 +1,35 @@
+@echo off
+REM Copy this to setenv.bat and fill in your values, then run:  call setenv.bat
+REM
+REM cmd.exe gotcha: do NOT put spaces around the = sign, and do NOT quote the
+REM value. "set KEY = value" creates a variable named "KEY " with value " value",
+REM which will fail in confusing ways.
+
+REM Force UTF-8 so redirecting output to a file cannot fail on odd characters.
+set PYTHONUTF8=1
+
+REM --- Model step. Without this, tickets are template-only but still filed. ---
+set ANTHROPIC_API_KEY=
+set PATCHWATCH_MODEL=claude-sonnet-5
+
+REM --- Free NVD key. Raises the limit from 5 to 50 requests per 30s. ---
+set NVD_API_KEY=
+
+REM --- Jira. Without these, no tickets are filed. ---
+set JIRA_BASE_URL=https://yourorg.atlassian.net
+set JIRA_EMAIL=
+set JIRA_API_TOKEN=
+set JIRA_PROJECT=SEC
+set JIRA_ISSUE_TYPE=Task
+
+REM --- Urgent path for KEV / exploited CVEs. At least one recommended. ---
+set SLACK_WEBHOOK_URL=
+set PAGERDUTY_ROUTING_KEY=
+
+REM --- Point at your own SOFA fork once self-hosted. ---
+set SOFA_BASE=https://sofafeed.macadmins.io
+
+REM --- Corporate proxy, if you need one. ---
+REM set HTTPS_PROXY=http://proxy.yourorg.com:8080
+
+echo Environment configured for patchwatch.

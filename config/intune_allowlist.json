@@ -1,0 +1,200 @@
+{
+  "_comment": [
+    "Allowlist of Intune settings the model is permitted to recommend. Anything not",
+    "listed here is REJECTED by validate.py, no exceptions.",
+    "",
+    "This file exists mainly because of the Apple DDM migration. Apple deprecated",
+    "MDM-based software update workloads and Intune is ending support for MDM-based",
+    "Apple software update policies; Microsoft's guidance is to use declarative",
+    "device management instead. There are no longer dedicated update policy blades",
+    "for iOS/macOS - everything moved to Settings Catalog profiles under the",
+    "Declarative Device Management category.",
+    "",
+    "A model working from older training data WILL confidently recommend the dead",
+    "'Devices > Update policies for iOS' blade. This allowlist is the only thing",
+    "that catches it. Review this file whenever Intune ships a release note."
+  ],
+
+  "deprecated_terms": [
+    "Update policies for iOS",
+    "Update policies for iOS/iPadOS",
+    "Update policies for macOS",
+    "iOS update policy",
+    "macOS update policy",
+    "Software update policy",
+    "Devices > Apple updates > iOS/iPadOS update policies",
+    "MDM software update"
+  ],
+
+  "platforms": {
+    "ios": {
+      "policy_paths": [
+        "Devices > Configuration > Create policy > iOS/iPadOS > Settings catalog > Declarative Device Management (DDM) > Software Update",
+        "Devices > Compliance policies > Create policy > iOS/iPadOS"
+      ],
+      "minimum_os": "17.0",
+      "minimum_os_note": "Managed software updates via the settings catalog require iOS/iPadOS 17.0 or later. Devices below that fall back to compliance-policy enforcement only.",
+      "settings": {
+        "ddm_target_os_version": {
+          "label": "Software Update > Target OS Version",
+          "type": "os_version",
+          "pattern": "^\\d+(\\.\\d+){0,2}( \\([a-z]\\))?$",
+          "model": "targeted_version",
+          "description": "Pin devices to a specific OS version. Use for controlled rollout when app compatibility matters."
+        },
+        "ddm_target_build_version": {
+          "label": "Software Update > Target Build Version",
+          "type": "build",
+          "pattern": "^[0-9]{2}[A-Z][0-9]{2,4}[a-z]?$",
+          "description": "Build-level pin. Needed for rapid security responses, which carry versions like 16.5.1 (a)."
+        },
+        "ddm_target_local_date_time": {
+          "label": "Software Update > Target Local Date Time",
+          "type": "datetime",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+          "description": "Enforcement deadline in device-local time. The device installs autonomously by this point."
+        },
+        "ddm_enforce_latest_deferral_days": {
+          "label": "Software Update Enforce Latest > Deferral (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 90,
+          "model": "latest_version",
+          "description": "Auto-install the newest eligible OS after this many days. Simplest model; use when you always want current."
+        },
+        "compliance_min_os_version": {
+          "label": "Compliance policy > Device Properties > Minimum OS version",
+          "type": "os_version",
+          "pattern": "^\\d+(\\.\\d+){0,2}$",
+          "description": "Conditional Access lever. Non-compliant devices lose resource access. Pair with, do not substitute for, DDM."
+        },
+        "compliance_min_os_build": {
+          "label": "Compliance policy > Device Properties > Minimum OS build version",
+          "type": "build",
+          "pattern": "^[0-9]{2}[A-Z][0-9]{2,4}[a-z]?$",
+          "description": "Use when a rapid security response shares its marketing version with the base release."
+        }
+      }
+    },
+
+    "macos": {
+      "policy_paths": [
+        "Devices > Configuration > Create policy > macOS > Settings catalog > Declarative Device Management (DDM) > Software Update",
+        "Devices > Compliance policies > Create policy > macOS"
+      ],
+      "minimum_os": "14.0",
+      "minimum_os_note": "Managed software updates via the settings catalog require macOS 14.0 or later.",
+      "settings": {
+        "ddm_target_os_version": {
+          "label": "Software Update > Target OS Version",
+          "type": "os_version",
+          "pattern": "^\\d+(\\.\\d+){0,2}$",
+          "model": "targeted_version"
+        },
+        "ddm_target_build_version": {
+          "label": "Software Update > Target Build Version",
+          "type": "build",
+          "pattern": "^[0-9]{2}[A-Z][0-9]{2,4}[a-z]?$"
+        },
+        "ddm_target_local_date_time": {
+          "label": "Software Update > Target Local Date Time",
+          "type": "datetime",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+        },
+        "ddm_enforce_latest_deferral_days": {
+          "label": "Software Update Enforce Latest > Deferral (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 90,
+          "model": "latest_version"
+        },
+        "compliance_min_os_version": {
+          "label": "Compliance policy > Device Properties > Minimum OS version",
+          "type": "os_version",
+          "pattern": "^\\d+(\\.\\d+){0,2}$"
+        }
+      }
+    },
+
+    "android": {
+      "policy_paths": [
+        "Devices > Compliance policies > Create policy > Android Enterprise",
+        "Devices > Configuration > Create policy > Android Enterprise > Device restrictions > System update"
+      ],
+      "settings": {
+        "compliance_min_security_patch_level": {
+          "label": "Compliance policy > Device Health > Minimum security patch level",
+          "type": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "deterministic": true,
+          "description": "Maps 1:1 onto the Android bulletin patch-level date. Computed in code, never by the model."
+        },
+        "compliance_min_os_version": {
+          "label": "Compliance policy > Device Properties > Minimum OS version",
+          "type": "os_version",
+          "pattern": "^\\d+(\\.\\d+){0,2}$"
+        },
+        "system_update_mode": {
+          "label": "Device restrictions > System update",
+          "type": "enum",
+          "values": ["Automatic", "Postpone", "Windowed", "Device Default"]
+        },
+        "system_update_freeze_days": {
+          "label": "Device restrictions > System update > Postpone (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 30,
+          "description": "Android caps postponement at 30 days."
+        }
+      }
+    },
+
+    "windows": {
+      "policy_paths": [
+        "Devices > Windows > Update rings for Windows 10 and later",
+        "Devices > Windows > Feature updates for Windows 10 and later",
+        "Devices > Compliance policies > Create policy > Windows 10 and later"
+      ],
+      "settings": {
+        "quality_update_deferral_days": {
+          "label": "Update ring > Quality update deferral period (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 30
+        },
+        "quality_update_deadline_days": {
+          "label": "Update ring > Deadline for quality updates (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 30
+        },
+        "grace_period_days": {
+          "label": "Update ring > Grace period (days)",
+          "type": "integer",
+          "min": 0,
+          "max": 7
+        },
+        "auto_reboot_before_deadline": {
+          "label": "Update ring > Auto reboot before deadline",
+          "type": "enum",
+          "values": ["Yes", "No"]
+        },
+        "compliance_min_os_version": {
+          "label": "Compliance policy > Device Properties > Minimum OS version",
+          "type": "windows_build",
+          "pattern": "^10\\.0\\.\\d{5}\\.\\d{1,5}$",
+          "description": "Windows compliance uses full build numbers, e.g. 10.0.26100.1234 - not marketing names like 24H2."
+        }
+      }
+    }
+  },
+
+  "deadline_policy": {
+    "_comment": "Maximum days from ticket creation to enforced install, by severity. The validator rejects any model-proposed deadline outside these bounds.",
+    "CRITICAL": 3,
+    "HIGH": 7,
+    "MEDIUM": 30,
+    "LOW": 90,
+    "UNKNOWN": 14
+  }
+}
