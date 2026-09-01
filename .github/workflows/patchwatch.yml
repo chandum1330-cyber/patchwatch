@@ -1,0 +1,167 @@
+name: patchwatch
+
+on:
+  # Every 4 hours, not daily. Apple ships rapid security responses for actively
+  # exploited bugs on no schedule at all, and a 24h detection gap on those is the
+  # scenario this whole pipeline exists to prevent. Runs are idempotent - if nothing
+  # changed, the state file is byte-identical and no commit happens.
+  #
+  # Two caveats about GitHub's scheduler, both of which have bitten people:
+  #   - cron is best-effort. Runs are delayed under load, sometimes by 30+ minutes.
+  #     Never treat the schedule as a guarantee; the health check below is the
+  #     real detector.
+  #   - scheduled workflows are automatically DISABLED after 60 days of repository
+  #     inactivity. The state commit-back below counts as activity, which keeps the
+  #     schedule alive as a side effect. Do not remove it.
+  schedule:
+    - cron: "17 */4 * * *"
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without filing tickets or writing state"
+        type: boolean
+        default: false
+      platforms:
+        description: "Comma-separated platforms"
+        default: "ios,macos,android,windows"
+      since_days:
+        description: "Ignore releases older than N days"
+        default: "30"
+      threshold:
+        description: "Minimum severity to action"
+        type: choice
+        options: [CRITICAL, HIGH, MEDIUM, LOW]
+        default: HIGH
+
+# Never let two runs race on the state file.
+concurrency:
+  group: patchwatch-state
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # required to commit the state file back
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No dependency installation step. patchwatch is stdlib-only by design:
+      # a tool that gates security alerting should not have a supply chain.
+
+      - name: Run patchwatch
+        id: scan
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT: ${{ vars.JIRA_PROJECT }}
+          JIRA_ISSUE_TYPE: ${{ vars.JIRA_ISSUE_TYPE }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+          # Point at your own fork's Pages URL once you self-host SOFA.
+          SOFA_BASE: ${{ vars.SOFA_BASE || 'https://sofafeed.macadmins.io' }}
+        run: |
+          python -m patchwatch run \
+            --platforms "${{ inputs.platforms || 'ios,macos,android,windows' }}" \
+            --threshold "${{ inputs.threshold || 'HIGH' }}" \
+            --since-days "${{ inputs.since_days || '30' }}" \
+            ${{ inputs.dry_run && '--dry-run' || '' }} \
+            2>&1 | tee run.log
+          exit ${PIPESTATUS[0]}
+
+      # Runs even when the scan exits non-zero: a partial run still produces state
+      # worth keeping, and losing it would cause duplicate tickets next run.
+      - name: Commit state
+        if: always() && !inputs.dry_run
+        run: |
+          if [[ -n "$(git status --porcelain state/)" ]]; then
+            git config user.name  "patchwatch[bot]"
+            git config user.email "patchwatch@users.noreply.github.com"
+            git add state/
+            git commit -m "state: $(date -u +%Y-%m-%dT%H:%M:%SZ) run $GITHUB_RUN_NUMBER"
+            # The remote can move while a run is in flight - a web-UI edit, or an
+            # overlapping run. A bare push then fails with "fetch first" and the
+            # state is lost, which causes duplicate tickets next run. Rebase and
+            # retry instead. State is append-mostly so rebasing is safe.
+            for attempt in 1 2 3; do
+              if git push; then
+                echo "state pushed on attempt $attempt"
+                break
+              fi
+              echo "push rejected, rebasing onto remote (attempt $attempt)"
+              git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || {
+                echo "rebase conflict on state file; taking our version"
+                git checkout --ours state/ && git add state/ && git rebase --continue
+              }
+              sleep $((attempt * 3))
+            done
+          else
+            echo "no state changes"
+          fi
+
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patchwatch-log-${{ github.run_number }}
+          path: run.log
+          retention-days: 30
+
+      # A source that broke silently is the failure mode that matters most, so it
+      # gets its own notification rather than relying on someone noticing a red X.
+      - name: Alert on source failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+            ERRORS=$(grep -A20 "SOURCE ERRORS" run.log 2>/dev/null | head -20 || echo "see run log")
+            python - <<'PY'
+          import json, os, urllib.request
+          msg = {"text": (
+              ":rotating_light: patchwatch run failed - patch monitoring is DEGRADED\n"
+              f"Run: {os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
+              f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          )}
+          req = urllib.request.Request(
+              os.environ["SLACK_WEBHOOK_URL"],
+              data=json.dumps(msg).encode(),
+              headers={"Content-Type": "application/json"},
+          )
+          urllib.request.urlopen(req, timeout=15)
+          PY
+          fi
+
+  # NOTE ON WHAT THIS JOB CAN AND CANNOT DO:
+  # It only runs when the workflow runs, so it can never detect the failure mode it
+  # was meant to catch - the schedule silently stopping. Treat it as a sanity check
+  # that the scan wrote state, and put a REAL staleness alarm outside GitHub
+  # (an external uptime monitor watching the state file's commit timestamp).
+  health:
+    runs-on: ubuntu-latest
+    needs: scan
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Must read the tip of the branch, not the commit that triggered the run.
+          # The scan job commits state AFTER this workflow started, so the default
+          # checkout (github.sha) sees the pre-run state file and always reports
+          # a stale heartbeat.
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Heartbeat freshness
+        run: python -m patchwatch health --max-age-hours 9
