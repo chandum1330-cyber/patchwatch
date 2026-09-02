@@ -6376,11 +6376,11 @@
   "meta": {
     "last_run_summary": {
       "cves_actionable": 0,
-      "cves_seen": 537,
+      "cves_seen": 298,
       "cves_unscored": 0,
       "degraded_tickets": 0,
-      "exploited": 5,
-      "kev_hits": 5,
+      "exploited": 4,
+      "kev_hits": 4,
       "nvd_stats": {
         "awaiting": 0,
         "not_scheduled": 0,
@@ -6390,24 +6390,23 @@
       "releases_changed": 0,
       "releases_delivered": 0,
       "releases_new": 0,
-      "releases_seen": 10,
+      "releases_seen": 9,
       "source_errors": [
         "android: https://source.android.com/docs/security/bulletin/2026/2026-08-01: bulletin loaded (259889 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list.",
-        "android: https://source.android.com/docs/security/bulletin/2026/2026-07-01: bulletin loaded (264779 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list."
+        "android: https://source.android.com/docs/security/bulletin/2026/2026-07-01: bulletin loaded (264779 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list.",
+        "windows: fetched 0 releases from MSRC"
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-02T16:32:50+00:00",
+    "last_successful_run": "2026-09-02T20:31:45+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
   "releases": {
     "android-2026-06-01": {
       "advisory_url": "https://source.android.com/docs/security/bulletin/2026/2026-06-01",
-      "content_hash": "0a89c965e77e9df0",
+      "content_hash": "109d5dfec265dfe6",
       "cve_ids": [
-        "CVE-2025-22424",
-        "CVE-2025-22426",
         "CVE-2025-26418",
         "CVE-2025-32348",
         "CVE-2025-40214",
@@ -6419,7 +6418,6 @@
         "CVE-2025-48570",
         "CVE-2025-48581",
         "CVE-2025-48595",
-        "CVE-2025-48600",
         "CVE-2025-48612",
         "CVE-2025-48615",
         "CVE-2025-48616",
@@ -6528,12 +6526,14 @@
       ],
       "delivered_at": null,
       "first_seen": "2026-09-01T13:19:04+00:00",
-      "last_seen": "2026-09-01T13:19:04+00:00",
-      "notes": [],
+      "last_seen": "2026-09-02T20:31:45+00:00",
+      "notes": [
+        "2026-09-02T20:31:45+00:00: advisory revised (rev 2); added no new CVEs"
+      ],
       "platform": "android",
       "release_date": "2026-06-01",
       "release_key": "android-2026-06-01",
-      "revision": 1,
+      "revision": 2,
       "ticket_key": null,
       "ticket_url": null,
       "title": "Android Security Bulletin 2026-06-01"
