@@ -6393,11 +6393,11 @@
       "releases_seen": 10,
       "source_errors": [
         "android: https://source.android.com/docs/security/bulletin/2026/2026-08-01: bulletin loaded (259885 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list.",
-        "android: https://source.android.com/docs/security/bulletin/2026/2026-07-01: bulletin loaded (264775 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list."
+        "android: https://source.android.com/docs/security/bulletin/2026/2026-07-01: bulletin loaded (264779 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list."
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-01T20:30:23+00:00",
+    "last_successful_run": "2026-09-02T00:39:13+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
