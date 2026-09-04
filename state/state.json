@@ -6398,7 +6398,7 @@
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-04T00:38:08+00:00",
+    "last_successful_run": "2026-09-04T04:32:01+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
