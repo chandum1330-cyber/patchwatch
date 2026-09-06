@@ -6376,28 +6376,28 @@
   "meta": {
     "last_run_summary": {
       "cves_actionable": 0,
-      "cves_seen": 534,
+      "cves_seen": 531,
       "cves_unscored": 0,
       "degraded_tickets": 0,
-      "exploited": 5,
-      "kev_hits": 5,
+      "exploited": 2,
+      "kev_hits": 2,
       "nvd_stats": {
         "awaiting": 0,
         "not_scheduled": 0,
-        "queried": 32,
-        "scored": 32
+        "queried": 29,
+        "scored": 29
       },
       "releases_changed": 0,
       "releases_delivered": 0,
       "releases_new": 0,
-      "releases_seen": 10,
+      "releases_seen": 7,
       "source_errors": [
         "android: https://source.android.com/docs/security/bulletin/2026/2026-08-01: bulletin loaded (259885 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list.",
         "android: https://source.android.com/docs/security/bulletin/2026/2026-07-01: bulletin loaded (264779 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list."
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-05T20:29:43+00:00",
+    "last_successful_run": "2026-09-06T00:42:47+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
