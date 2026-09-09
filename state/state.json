@@ -18088,10 +18088,10 @@
   },
   "meta": {
     "last_run_summary": {
-      "cves_actionable": 923,
+      "cves_actionable": 0,
       "cves_seen": 1432,
       "cves_unscored": 0,
-      "degraded_tickets": 3,
+      "degraded_tickets": 0,
       "exploited": 4,
       "kev_hits": 4,
       "nvd_stats": {
@@ -18100,9 +18100,9 @@
         "queried": 29,
         "scored": 29
       },
-      "releases_changed": 1,
+      "releases_changed": 0,
       "releases_delivered": 0,
-      "releases_new": 2,
+      "releases_new": 0,
       "releases_seen": 10,
       "source_errors": [
         "android: https://source.android.com/docs/security/bulletin/2026/2026-08-01: bulletin loaded (260852 bytes) but contains no CVE identifiers. Google published the July and August 2026 bulletins without vulnerability detail sections. Filing the patch level anyway - the Intune setting does not depend on the CVE list.",
@@ -18110,7 +18110,7 @@
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-08T20:31:26+00:00",
+    "last_successful_run": "2026-09-09T00:41:48+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
