@@ -18110,7 +18110,7 @@
       ],
       "urgent_alerts": 0
     },
-    "last_successful_run": "2026-09-10T08:34:07+00:00",
+    "last_successful_run": "2026-09-10T12:38:08+00:00",
     "note": "Seeded empty. The first run will populate this and commit it back.",
     "schema_version": 1
   },
